@@ -94,6 +94,7 @@
     <button id="playBtn" disabled>Jugar (sumar entero)</button>
     <button id="passBtn" disabled class="secondary">Pasar carta a mesa</button>
     <button id="restartBtn" style="display:none">Reiniciar</button>
+	<button id="nextRoundBtn" style="display:none" class="secondary">Siguiente ronda ▶</button>
   </div>
 
   <div id="status">
@@ -137,7 +138,7 @@
     const PALOS = ['amarillo','magenta','verde','azul'];
     const FRACCIONES = ['1/2','1/3','2/3','1/4','3/4','2/5','3/5','1/6','5/6','3/10','7/10','3/8','5/8','1/8','1/5','4/5','7/8'];
     const CARTAS_POR_MANO = 4;
-    const MATCH_TARGET = 100; // objetivo de la partida
+    const MATCH_TARGET = 68; // objetivo de la partida
 
     // ----- Estado global del match -----
     let playerScore = 0;
@@ -171,6 +172,7 @@
     const playBtn = document.getElementById('playBtn');
     const passBtn = document.getElementById('passBtn');
     const restartBtn = document.getElementById('restartBtn');
+	const nextRoundBtn = document.getElementById('nextRoundBtn'); // 👈 nuevo
     const tableDiv = document.getElementById('table');
     const handDiv = document.getElementById('hand');
     const roundInfo = document.getElementById('roundInfo');
@@ -456,41 +458,36 @@
 
     // ----- Fin de ronda y cierre de partida (lógica de ronda completa) -----
     function checkRoundEnd(){ 
-      // Cuando ambas manos quedan vacías:
-      if(playerHand.length===0 && machineHand.length===0){
-        if(deck.length>0){
-          // seguir repartiendo dentro de la misma ronda (mismo mazo)
-          const toGive = Math.min(CARTAS_POR_MANO, Math.floor(deck.length/2));
-          playerHand = []; 
-          machineHand = [];
-          for(let i=0;i<toGive && deck.length>0;i++) playerHand.push(deck.shift());
-          for(let i=0;i<toGive && deck.length>0;i++) machineHand.push(deck.shift());
-          selectedHandId=null; selectedTableIds.clear(); 
-          appendLog(`Se reparten nuevas manos dentro de la Ronda ${roundNum}.`);
-          render();
-		  
-		  if(roundNum % 2 === 0){
-        appendLog('Comienza la ronda con la Máquina (turno inicial).');
-        setTimeout(machineTurn, 650);
-      }
-        } else {
-          // fin de la ronda: aplicar bonificaciones de la ronda y comprobar match
-          appendScoreSummary(`--- Finaliza ronda ${roundNum} — aplicando bonos ---`);
-          // Añadimos resumen de enteros y escobas de la ronda
-          appendScoreSummary(`Enteros en la ronda — Jugador: ${playerIntegerPointsRound}, Máquina: ${machineIntegerPointsRound}.`);
-          appendScoreSummary(`Escobas en la ronda — Jugador: ${playerEscobasRound}, Máquina: ${machineEscobasRound}.`);
-          applyEndOfRoundBonuses();
-          // comprobar si alguien alcanzó el objetivo del match
-          if(playerScore >= MATCH_TARGET || machineScore >= MATCH_TARGET){
-            finishMatch();
-          } else {
-            // iniciar nueva ronda
-            appendScoreSummary(`Puntuación acumulada — Jugador: ${playerScore}, Máquina: ${machineScore}. Preparando siguiente ronda...`);
-            startNewRound();
-          }
-        }
+  // Cuando ambas manos quedan vacías:
+  if(playerHand.length===0 && machineHand.length===0){
+    if(deck.length>0){
+      // seguir repartiendo dentro de la misma ronda (mismo mazo)
+      const toGive = Math.min(CARTAS_POR_MANO, Math.floor(deck.length/2));
+      playerHand = []; 
+      machineHand = [];
+      for(let i=0;i<toGive && deck.length>0;i++) playerHand.push(deck.shift());
+      for(let i=0;i<toGive && deck.length>0;i++) machineHand.push(deck.shift());
+      selectedHandId=null; selectedTableIds.clear(); 
+      appendLog(`Se reparten nuevas manos dentro de la Ronda ${roundNum}.`);
+      render();
+    } else {
+      // fin de la ronda: aplicar bonificaciones de la ronda y comprobar match
+      appendScoreSummary(`--- Finaliza ronda ${roundNum} — aplicando bonos ---`);
+      appendScoreSummary(`Enteros en la ronda — Jugador: ${playerIntegerPointsRound}, Máquina: ${machineIntegerPointsRound}.`);
+      appendScoreSummary(`Escobas en la ronda — Jugador: ${playerEscobasRound}, Máquina: ${machineEscobasRound}.`);
+      applyEndOfRoundBonuses();
+
+      if(playerScore >= MATCH_TARGET || machineScore >= MATCH_TARGET){
+        finishMatch();
+      } else {
+        // ✅ NO iniciar automáticamente: mostrar botón
+        appendScoreSummary(`Puntuación acumulada — Jugador: ${playerScore}, Máquina: ${machineScore}.`);
+        appendLog(`Fin de la ronda ${roundNum}. Pulsá "Siguiente ronda" para continuar.`);
+        nextRoundBtn.style.display = 'inline-block';
       }
     }
+  }
+}1
 
     // ----- Cálculo final de bonificaciones (puntos 2..5) -----
     function applyEndOfRoundBonuses(){
@@ -552,6 +549,10 @@
     playBtn.addEventListener('click', tryPlayerPlay);
     passBtn.addEventListener('click', playerPass);
     restartBtn.addEventListener('click', ()=>location.reload());
+	nextRoundBtn.addEventListener('click', () => {
+	nextRoundBtn.style.display = 'none';
+	startNewRound();
+	});
 
     // habilitar botones según selección
     const obs = new MutationObserver(()=>{
@@ -569,4 +570,3 @@
 
 </body>
 </html>
-
