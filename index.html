@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -267,7 +268,16 @@
       playerScoreEl.textContent = playerScore;
       machineScoreEl.textContent = machineScore;
     }
-
+	
+	function disableActions(){
+	// Deshabilita acciones del jugador hasta que la máquina juegue
+	playBtn.disabled = true;
+	passBtn.disabled = true;
+	// Limpia selección para que no queden botones habilitados por el observer
+	selectedHandId = null;
+	selectedTableIds.clear();
+	render();
+	}
     // ----- Control de match / rondas -----
     function startMatch(){
       // inicio del match completo
@@ -470,6 +480,12 @@
       selectedHandId=null; selectedTableIds.clear(); 
       appendLog(`Se reparten nuevas manos dentro de la Ronda ${roundNum}.`);
       render();
+	  // 👇 acá entra la lógica de rondas pares
+  if(roundNum % 2 === 0){
+    appendLog("Ronda par: la máquina comienza esta mano.");
+    disableActions();
+    setTimeout(machineTurn, 800);
+  }
     } else {
       // fin de la ronda: aplicar bonificaciones de la ronda y comprobar match
       appendScoreSummary(`--- Finaliza ronda ${roundNum} — aplicando bonos ---`);
@@ -487,7 +503,7 @@
       }
     }
   }
-}1
+}
 
     // ----- Cálculo final de bonificaciones (puntos 2..5) -----
     function applyEndOfRoundBonuses(){
